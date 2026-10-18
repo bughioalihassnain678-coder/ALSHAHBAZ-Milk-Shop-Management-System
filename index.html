@@ -1,0 +1,2065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ALSHAHBAZ MILK SHOP - Management System</title>
+  <style>
+    :root {
+      --primary: #1b4332;
+      --primary-light: #2d6a4f;
+      --accent: #d4af37;
+      --cream: #fbf8f3;
+      --surface: #ffffff;
+      --text: #2b2d42;
+      --text-muted: #6c757d;
+      --border: #e2e8f0;
+      --danger: #d90429;
+      --success: #38b000;
+      --warning: #ffb703;
+      --sidebar-width: 250px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body { background-color: #f4f6f8; color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+    /* Sidebar */
+    .sidebar { width: var(--sidebar-width); background: var(--primary); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+    .sidebar-brand { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); background: #0f281e; }
+    .sidebar-brand h2 { font-size: 1.2rem; color: var(--accent); letter-spacing: 1px; font-weight: 700; }
+    .sidebar-brand p { font-size: 0.75rem; opacity: 0.8; margin-top: 4px; }
+    .nav-menu { list-style: none; padding: 10px 0; overflow-y: auto; flex-grow: 1; }
+    .nav-item { padding: 12px 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; border-left: 4px solid transparent; }
+    .nav-item:hover, .nav-item.active { background: var(--primary-light); border-left-color: var(--accent); }
+    .nav-item svg { width: 18px; height: 18px; fill: currentColor; }
+
+    /* Main Content */
+    .main-wrapper { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .top-bar { height: 60px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 25px; }
+    .top-bar .page-title { font-size: 1.2rem; font-weight: 600; color: var(--primary); }
+    .top-bar .date-display { font-size: 0.85rem; color: var(--text-muted); }
+
+    .content-area { flex-grow: 1; padding: 25px; overflow-y: auto; background: var(--cream); }
+    .page-section { display: none; }
+    .page-section.active { display: block; }
+
+    /* Dashboard Cards */
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 25px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 25px; }
+    .card { background: var(--surface); border-radius: 8px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+    .card-stat { display: flex; flex-direction: column; }
+    .card-stat .title { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .card-stat .value { font-size: 1.6rem; font-weight: 700; color: var(--primary); margin-top: 8px; }
+    .card-stat .sub { font-size: 0.8rem; margin-top: 5px; }
+    .sub.positive { color: var(--success); }
+    .sub.negative { color: var(--danger); }
+
+    /* Form Controls */
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+    .form-control { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; outline: none; transition: border 0.2s; }
+    .form-control:focus { border-color: var(--primary); }
+    .form-row { display: flex; gap: 15px; }
+    .form-row .form-group { flex: 1; }
+
+    /* Buttons */
+    .btn { padding: 9px 18px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: background 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-light); }
+    .btn-accent { background: var(--accent); color: #000; }
+    .btn-accent:hover { opacity: 0.9; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { opacity: 0.9; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { background: #f1f5f9; }
+    .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+
+    /* Tables */
+    .table-responsive { overflow-x: auto; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
+    th { background: #f8fafc; padding: 12px 15px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
+    td { padding: 12px 15px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background: #fafafa; }
+
+    /* Badges */
+    .badge { padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
+    .badge-paid { background: #dcfce7; color: #15803d; }
+    .badge-partial { background: #fef9c3; color: #a16207; }
+    .badge-unpaid { background: #fee2e2; color: #b91c1c; }
+
+    /* POS UI */
+    .pos-layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; height: calc(100vh - 110px); }
+    .pos-products { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; align-content: start; }
+    .product-card { background: var(--surface); border: 2px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .product-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .product-card h3 { font-size: 1.3rem; color: var(--primary); margin-bottom: 8px; }
+    .product-card .price { font-size: 1.1rem; font-weight: 700; color: var(--accent); background: #0f281e; padding: 6px; border-radius: 6px; }
+
+    .pos-cart { background: var(--surface); border-radius: 10px; border: 1px solid var(--border); display: flex; flex-direction: column; }
+    .cart-header { padding: 15px; border-bottom: 1px solid var(--border); font-weight: 700; background: #f8fafc; }
+    .cart-items { flex-grow: 1; overflow-y: auto; padding: 15px; }
+    .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
+    .cart-footer { padding: 15px; border-top: 1px solid var(--border); background: #fafafa; }
+    .cart-summary-line { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
+    .cart-summary-line.total { font-size: 1.2rem; font-weight: 700; color: var(--primary); border-top: 1px solid var(--border); padding-top: 8px; }
+
+    /* Modal */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .modal { background: var(--surface); width: 90%; max-width: 550px; border-radius: 8px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-header { padding: 15px 20px; background: var(--primary); color: #fff; display: flex; justify-content: space-between; align-items: center; }
+    .modal-body { padding: 20px; max-height: 75vh; overflow-y: auto; }
+    .modal-footer { padding: 15px 20px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+
+
+    /* Responsive layout: laptop, tablet and mobile */
+    @media (max-width: 1000px) {
+      :root { --sidebar-width: 210px; }
+      .content-area { padding: 16px; }
+      .grid-2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+      .pos-layout { grid-template-columns: 1fr; height: auto; }
+      .pos-cart { min-height: 420px; }
+    }
+    @media (max-width: 700px) {
+      body { height: auto; min-height: 100vh; overflow: auto; flex-direction: column; }
+      .sidebar { width: 100%; max-height: none; }
+      .sidebar-brand { padding: 12px 16px; }
+      .nav-menu { display: flex; flex-direction: row; overflow-x: auto; padding: 6px; gap: 4px; }
+      .nav-item { flex: 0 0 auto; padding: 10px 12px; border-left: 0; border-bottom: 3px solid transparent; white-space: nowrap; }
+      .nav-item:hover, .nav-item.active { border-left-color: transparent; border-bottom-color: var(--accent); }
+      .main-wrapper { min-height: 0; overflow: visible; }
+      .top-bar { min-height: 56px; height: auto; padding: 12px 16px; gap: 10px; flex-wrap: wrap; }
+      .top-bar .page-title { font-size: 1.05rem; }
+      .content-area { padding: 12px; overflow: visible; }
+      .grid-4, .grid-2 { grid-template-columns: 1fr; gap: 12px; }
+      .form-row { flex-direction: column; gap: 0; }
+      .pos-products { grid-template-columns: 1fr; gap: 12px; }
+      .pos-layout { display: flex; flex-direction: column; gap: 12px; }
+      .pos-cart { min-height: 0; }
+      .card { padding: 14px; }
+      .content-area > section > div[style*="display:flex"] { flex-wrap: wrap; }
+      .btn { max-width: 100%; }
+      .modal-overlay { padding: 10px; align-items: flex-start; overflow-y: auto; }
+      .modal { width: 100%; max-width: 550px; margin: auto; }
+      .modal-footer { flex-wrap: wrap; }
+      .table-responsive { max-width: 100%; }
+      table { min-width: 620px; }
+      .receipt-box { max-width: 100%; }
+    }
+    @media (max-width: 380px) {
+      .content-area { padding: 8px; }
+      .sidebar-brand h2 { font-size: 1.05rem; }
+      .nav-item { font-size: 0.82rem; padding: 9px; }
+      .card-stat .value { font-size: 1.3rem; overflow-wrap: anywhere; }
+    }
+
+    /* Print styling */
+    @media print {
+      body * { visibility: hidden; }
+      #printable-area, #printable-area * { visibility: visible; }
+      #printable-area { position: absolute; left: 0; top: 0; width: 100%; padding: 0; margin: 0; background: #fff !important; }
+      .no-print { display: none !important; }
+    }
+
+    .receipt-box { width: 300px; margin: 0 auto; padding: 15px; border: 1px solid #ccc; font-family: monospace; font-size: 12px; color: #000; }
+    .receipt-header { text-align: center; margin-bottom: 10px; }
+    .receipt-header h2 { font-size: 16px; margin-bottom: 2px; text-transform: uppercase; }
+    .receipt-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+    .receipt-table th, .receipt-table td { text-align: left; padding: 3px 0; font-size: 11px; }
+    .receipt-total { border-top: 1px dashed #000; padding-top: 5px; margin-top: 5px; }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar no-print">
+    <div class="sidebar-brand">
+      <h2>ALSHAHBAZ</h2>
+      <p>MILK SHOP SYSTEM</p>
+    </div>
+    <ul class="nav-menu">
+      <li class="nav-item active" onclick="switchPage('dashboard')">
+        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8v-10h-8v10zm0-18v6h8V3h-8z"/></svg>
+        Dashboard
+      </li>
+      <li class="nav-item" onclick="switchPage('pos')">
+        <svg viewBox="0 0 24 24"><path d="M18 6h-2c0-2.21-1.79-4-4-4S8 3.79 8 6H6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6-2c1.1 0 2 .9 2 2h-4c0-1.1.9-2 2-2zm6 16H6V8h2v2c0 .55.45 1 1 1s1-.45 1-1V8h4v2c0 .55.45 1 1 1s1-.45 1-1V8h2v12z"/></svg>
+        POS / Sale Billing
+      </li>
+      <li class="nav-item" onclick="switchPage('customers')">
+        <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        Customers & Udhaar
+      </li>
+      <li class="nav-item" onclick="switchPage('suppliers')">
+        <svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+        Suppliers & Payables
+      </li>
+      <li class="nav-item" onclick="switchPage('cashbook')">
+        <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+        Cashbook & Expenses
+      </li>
+      <li class="nav-item" onclick="switchPage('reports')">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+        Profit & Sales Reports
+      </li>
+      <li class="nav-item" onclick="switchPage('settings')">
+        <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98 0 .33.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
+        Settings & Drive Backup
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Area -->
+  <div class="main-wrapper">
+    <header class="top-bar no-print">
+      <div class="page-title" id="page-title">Dashboard</div>
+      <div class="date-display" id="current-date">--</div>
+    </header>
+
+    <main class="content-area">
+
+      <!-- DASHBOARD PAGE -->
+      <section id="page-dashboard" class="page-section active">
+        <div style="display:flex; gap:10px; margin-bottom: 20px;">
+          <button class="btn btn-primary" onclick="switchPage('pos')">+ New Sale (POS)</button>
+          <button class="btn btn-outline" onclick="openModal('modal-add-customer')">+ Add Customer</button>
+          <button class="btn btn-outline" onclick="openModal('modal-receive-payment')">Receive Payment</button>
+          <button class="btn btn-outline" onclick="openModal('modal-add-purchase')">+ Add Purchase</button>
+          <button class="btn btn-outline" onclick="openModal('modal-pay-supplier')">Pay Supplier</button>
+        </div>
+
+        <div class="grid-4">
+          <div class="card card-stat">
+            <span class="title">Today's Cash Sales</span>
+            <span class="value" id="dash-today-cash">Rs. 0</span>
+          </div>
+          <div class="card card-stat">
+            <span class="title">Today's Udhaar Sales</span>
+            <span class="value" id="dash-today-udhaar">Rs. 0</span>
+          </div>
+          <div class="card card-stat">
+            <span class="title">Total Customer Udhaar</span>
+            <span class="value" style="color:var(--danger)" id="dash-total-udhaar-outstanding">Rs. 0</span>
+            <span class="sub negative">Outstanding Receivables</span>
+          </div>
+          <div class="card card-stat">
+            <span class="title">Supplier Payables</span>
+            <span class="value" style="color:var(--warning)" id="dash-total-supplier-payables">Rs. 0</span>
+            <span class="sub">Outstanding Payables</span>
+          </div>
+        </div>
+
+        <div class="grid-4">
+          <div class="card card-stat">
+            <span class="title">Buffalo Milk (Sold / Bought)</span>
+            <span class="value" id="dash-milk-qty">0 L / 0 L</span>
+          </div>
+          <div class="card card-stat">
+            <span class="title">Yogurt Dahi (Sold / Bought)</span>
+            <span class="value" id="dash-yogurt-qty">0 Kg / 0 Kg</span>
+          </div>
+          <div class="card card-stat">
+            <span class="title">Today's Revenue</span>
+            <span class="value" id="dash-today-revenue">Rs. 0</span>
+          </div>
+          <div class="card card-stat">
+            <span class="title">Est. Gross Profit (Today)</span>
+            <span class="value" style="color:var(--success)" id="dash-today-profit">Rs. 0</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-bottom:15px; color:var(--primary)">Recent Transactions</h3>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Inv #</th>
+                  <th>Date & Time</th>
+                  <th>Customer</th>
+                  <th>Total Amount</th>
+                  <th>Paid Amount</th>
+                  <th>Status</th>
+                  <th>Type</th>
+                </tr>
+              </thead>
+              <tbody id="dash-recent-table">
+                <!-- Dynamic Rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- POS / BILLING PAGE -->
+      <section id="page-pos" class="page-section">
+        <div class="pos-layout">
+          <div style="display:flex; flex-direction:column; gap:20px;">
+            <div class="pos-products">
+              <div class="product-card" onclick="posAddToCart('Buffalo Milk')">
+                <h3>Buffalo Milk</h3>
+                <p style="color:var(--text-muted); margin-bottom:10px;">Available Stock: <span id="pos-stock-milk">0</span> L</p>
+                <div class="price">Rs. <span id="pos-price-milk">0</span> / Litre</div>
+              </div>
+              <div class="product-card" onclick="posAddToCart('Yogurt (Dahi)')">
+                <h3>Yogurt (Dahi)</h3>
+                <p style="color:var(--text-muted); margin-bottom:10px;">Available Stock: <span id="pos-stock-yogurt">0</span> Kg</p>
+                <div class="price">Rs. <span id="pos-price-yogurt">0</span> / Kg</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h4 style="margin-bottom:10px;">Cart Line Items</h4>
+              <div class="table-responsive">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Qty (L/Kg)</th>
+                      <th>Rate (Rs)</th>
+                      <th>Subtotal</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pos-cart-table">
+                    <!-- Dynamic Cart -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cart Sidebar -->
+          <div class="pos-cart">
+            <div class="cart-header">Checkout / Payment Details</div>
+            <div class="cart-items">
+              <div class="form-group">
+                <label>Customer Selection (Optional for Cash)</label>
+                <select class="form-control" id="pos-customer-select" onchange="posCustomerChanged()">
+                  <option value="">-- Walk-in Customer (Cash) --</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Customer Name (If new)</label>
+                <input type="text" class="form-control" id="pos-cust-name" placeholder="Walk-in Customer">
+              </div>
+              <div class="form-group">
+                <label>Phone Number (Optional)</label>
+                <input type="text" class="form-control" id="pos-cust-phone" placeholder="03xx-xxxxxxx">
+              </div>
+              <div class="form-group">
+                <label>Payment Type</label>
+                <select class="form-control" id="pos-payment-type" onchange="posCalculateTotals()">
+                  <option value="Cash">Full Cash Payment</option>
+                  <option value="Udhaar">Full Udhaar (Credit)</option>
+                  <option value="Partial">Partial Payment</option>
+                </select>
+              </div>
+            </div>
+            <div class="cart-footer">
+              <div class="cart-summary-line">
+                <span>Subtotal:</span>
+                <span id="pos-subtotal">Rs. 0</span>
+              </div>
+              <div class="cart-summary-line">
+                <span>Discount (Rs.):</span>
+                <input type="number" id="pos-discount" value="0" min="0" style="width:80px; text-align:right" oninput="posCalculateTotals()">
+              </div>
+              <div class="cart-summary-line total">
+                <span>Grand Total:</span>
+                <span id="pos-grand-total">Rs. 0</span>
+              </div>
+              <div class="cart-summary-line" style="margin-top:10px;">
+                <span>Amount Paid:</span>
+                <input type="number" id="pos-amount-paid" value="0" min="0" style="width:100px; text-align:right; font-weight:bold" oninput="posCalculateTotals()">
+              </div>
+              <div class="cart-summary-line" style="color:var(--danger)">
+                <span>Remaining Udhaar:</span>
+                <span id="pos-remaining-udhaar">Rs. 0</span>
+              </div>
+              <button class="btn btn-primary" style="width:100%; margin-top:15px; padding:12px;" onclick="posCompleteSale()">Complete Sale & Print Receipt</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CUSTOMERS & UDHAAR PAGE -->
+      <section id="page-customers" class="page-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <h3>Customer Ledgers & Credit Records</h3>
+          <button class="btn btn-primary" onclick="openModal('modal-add-customer')">+ Register Customer</button>
+        </div>
+
+        <div class="card" style="margin-bottom:20px;">
+          <input type="text" class="form-control" id="customer-search-input" placeholder="Search customer by name or phone..." onkeyup="renderCustomersTable()">
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Customer Name</th>
+                <th>Phone Number</th>
+                <th>Address</th>
+                <th>Total Udhaar Received</th>
+                <th>Total Paid</th>
+                <th>Current Balance</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="customers-table-body">
+              <!-- Dynamic -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SUPPLIERS PAGE -->
+      <section id="page-suppliers" class="page-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <h3>Suppliers & Purchase Accounts</h3>
+          <div style="display:flex; gap:10px;">
+            <button class="btn btn-primary" onclick="openModal('modal-add-supplier')">+ Register Supplier</button>
+            <button class="btn btn-accent" onclick="openModal('modal-add-purchase')">+ Record Purchase</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Supplier Name</th>
+                <th>Phone</th>
+                <th>Products</th>
+                <th>Total Purchased</th>
+                <th>Total Paid</th>
+                <th>Remaining Payable</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="suppliers-table-body">
+              <!-- Dynamic -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- CASHBOOK PAGE -->
+      <section id="page-cashbook" class="page-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <h3>Shop Cashbook & Expenses</h3>
+          <button class="btn btn-primary" onclick="openModal('modal-add-expense')">+ Record Shop Expense</button>
+        </div>
+
+        <div class="grid-4">
+          <div class="card card-stat">
+            <span class="title">Opening Cash Balance</span>
+            <span class="value" id="cb-opening-cash">Rs. 0</span>
+          </div>
+          <div class="card card-stat">
+            <span class="title">Total Cash In</span>
+            <span class="value" style="color:var(--success)" id="cb-total-in">Rs. 0</span>
+          </div>
+          <div class="card card-stat">
+            <span class="title">Total Cash Out</span>
+            <span class="value" style="color:var(--danger)" id="cb-total-out">Rs. 0</span>
+          </div>
+          <div class="card card-stat">
+            <span class="title">Current Cash in Hand</span>
+            <span class="value" style="color:var(--primary)" id="cb-current-balance">Rs. 0</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4 style="margin-bottom:15px;">Cashbook Entries (In & Out Flow)</h4>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date & Time</th>
+                  <th>Type</th>
+                  <th>Category</th>
+                  <th>Description</th>
+                  <th>Amount In (Rs.)</th>
+                  <th>Amount Out (Rs.)</th>
+                </tr>
+              </thead>
+              <tbody id="cashbook-table-body">
+                <!-- Dynamic -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- REPORTS PAGE -->
+      <section id="page-reports" class="page-section">
+        <div class="card" style="margin-bottom:20px;">
+          <div class="form-row" style="align-items:flex-end;">
+            <div class="form-group">
+              <label>From Date</label>
+              <input type="date" class="form-control" id="report-filter-from">
+            </div>
+            <div class="form-group">
+              <label>To Date</label>
+              <input type="date" class="form-control" id="report-filter-to">
+            </div>
+            <div class="form-group">
+              <button class="btn btn-primary" onclick="generateReports()">Filter Reports</button>
+              <button class="btn btn-outline" onclick="exportCSV()">Export Sales CSV</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <h4 style="color:var(--primary); margin-bottom:15px;">Buffalo Milk Breakdown</h4>
+            <div class="cart-summary-line"><span>Total Litres Purchased:</span><strong id="rep-milk-bought">0 L</strong></div>
+            <div class="cart-summary-line"><span>Total Purchase Cost:</span><strong id="rep-milk-buy-cost">Rs. 0</strong></div>
+            <div class="cart-summary-line"><span>Total Litres Sold:</span><strong id="rep-milk-sold">0 L</strong></div>
+            <div class="cart-summary-line"><span>Total Sales Revenue:</span><strong id="rep-milk-sales-rev">Rs. 0</strong></div>
+            <div class="cart-summary-line total"><span>Est. Gross Profit:</span><strong id="rep-milk-profit">Rs. 0</strong></div>
+          </div>
+
+          <div class="card">
+            <h4 style="color:var(--primary); margin-bottom:15px;">Yogurt (Dahi) Breakdown</h4>
+            <div class="cart-summary-line"><span>Total KGs Purchased:</span><strong id="rep-yogurt-bought">0 Kg</strong></div>
+            <div class="cart-summary-line"><span>Total Purchase Cost:</span><strong id="rep-yogurt-buy-cost">Rs. 0</strong></div>
+            <div class="cart-summary-line"><span>Total KGs Sold:</span><strong id="rep-yogurt-sold">0 Kg</strong></div>
+            <div class="cart-summary-line"><span>Total Sales Revenue:</span><strong id="rep-yogurt-sales-rev">Rs. 0</strong></div>
+            <div class="cart-summary-line total"><span>Est. Gross Profit:</span><strong id="rep-yogurt-profit">Rs. 0</strong></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4 style="color:var(--primary); margin-bottom:15px;">Net Profit & Loss Statement</h4>
+          <div class="cart-summary-line"><span>Total Sales Revenue:</span><strong id="rep-net-sales">Rs. 0</strong></div>
+          <div class="cart-summary-line"><span>Less Cost of Goods Sold (COGS):</span><strong id="rep-net-cogs">Rs. 0</strong></div>
+          <div class="cart-summary-line" style="font-weight:bold;"><span>Gross Profit:</span><strong id="rep-net-gross">Rs. 0</strong></div>
+          <div class="cart-summary-line"><span>Less Shop Operating Expenses:</span><strong id="rep-net-expenses" style="color:var(--danger)">Rs. 0</strong></div>
+          <div class="cart-summary-line total" style="font-size:1.4rem;"><span>Net Profit:</span><strong id="rep-net-final" style="color:var(--success)">Rs. 0</strong></div>
+        </div>
+      </section>
+
+      <!-- SETTINGS & DRIVE BACKUP PAGE -->
+      <section id="page-settings" class="page-section">
+        <div class="grid-2">
+          <div class="card">
+            <h3 style="color:var(--primary); margin-bottom:15px;">Shop Information & Pricing</h3>
+            <div class="form-group">
+              <label>Shop Name</label>
+              <input type="text" class="form-control" id="cfg-shop-name" value="ALSHAHBAZ MILK SHOP">
+            </div>
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="text" class="form-control" id="cfg-shop-phone" value="0300-1234567">
+            </div>
+            <div class="form-group">
+              <label>Shop Address</label>
+              <input type="text" class="form-control" id="cfg-shop-address" value="Main Bazaar, City">
+            </div>
+            <div class="form-group">
+              <label>Receipt Footer Note</label>
+              <input type="text" class="form-control" id="cfg-receipt-footer" value="Shukriya! Dobara Tashreef Laayein.">
+            </div>
+            <div class="form-group">
+              <label>Opening Cash Balance (Rs.)</label>
+              <input type="number" class="form-control" id="cfg-opening-cash" value="0">
+            </div>
+            <hr style="margin:15px 0;">
+            <h4 style="margin-bottom:10px;">Default Product Prices</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Milk Purchase Rate (Rs/L)</label>
+                <input type="number" class="form-control" id="cfg-milk-buy" value="180">
+              </div>
+              <div class="form-group">
+                <label>Milk Selling Rate (Rs/L)</label>
+                <input type="number" class="form-control" id="cfg-milk-sell" value="210">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Yogurt Purchase Rate (Rs/Kg)</label>
+                <input type="number" class="form-control" id="cfg-yogurt-buy" value="200">
+              </div>
+              <div class="form-group">
+                <label>Yogurt Selling Rate (Rs/Kg)</label>
+                <input type="number" class="form-control" id="cfg-yogurt-sell" value="240">
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveSettings()">Save Settings & Pricing</button>
+          </div>
+
+          <div class="card">
+            <h3 style="color:var(--primary); margin-bottom:15px;">Google Drive & Local Data Backup</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">
+              Connect your Google Drive account using Google OAuth API to upload secure backups directly to your personal Drive.
+            </p>
+            <div class="form-group">
+              <label>Google OAuth Client ID</label>
+              <input type="text" class="form-control" id="cfg-gdrive-client-id" placeholder="YOUR_CLIENT_ID.apps.googleusercontent.com">
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+              <button class="btn btn-outline" onclick="initGoogleAuth()">Authenticate Google Drive</button>
+              <button class="btn btn-accent" onclick="uploadToGoogleDrive()">Upload Backup Now</button>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-muted);">Status: <span id="gdrive-status" style="font-weight:bold;">Not Connected</span></p>
+
+            <hr style="margin:20px 0;">
+
+            <h4 style="margin-bottom:10px;">Local JSON Backup & Restore</h4>
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+              <button class="btn btn-outline" onclick="exportJSONBackup()">Download JSON Backup</button>
+              <input type="file" id="import-json-file" style="display:none" onchange="importJSONBackup(event)">
+              <button class="btn btn-outline" onclick="document.getElementById('import-json-file').click()">Restore JSON File</button>
+            </div>
+
+            <hr style="margin:20px 0;">
+
+            <h4 style="color:var(--danger); margin-bottom:10px;">Reset Business Records</h4>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">Permanently wipe all sales, purchases, customer ledgers, and expenses.</p>
+            <button class="btn btn-danger" onclick="resetAllRecords()">Reset All Records</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- Modal: Add Customer -->
+  <div class="modal-overlay" id="modal-add-customer">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Register New Customer</h3>
+        <span style="cursor:pointer" onclick="closeModal('modal-add-customer')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Customer Name *</label>
+          <input type="text" class="form-control" id="m-cust-name" required>
+        </div>
+        <div class="form-group">
+          <label>Phone Number (Optional)</label>
+          <input type="text" class="form-control" id="m-cust-phone">
+        </div>
+        <div class="form-group">
+          <label>Address (Optional)</label>
+          <input type="text" class="form-control" id="m-cust-address">
+        </div>
+        <div class="form-group">
+          <label>Opening Udhaar Balance (Rs.)</label>
+          <input type="number" class="form-control" id="m-cust-opening" value="0">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-add-customer')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveCustomer()">Save Customer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Receive Udhaar Payment -->
+  <div class="modal-overlay" id="modal-receive-payment">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Receive Customer Udhaar Payment</h3>
+        <span style="cursor:pointer" onclick="closeModal('modal-receive-payment')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Select Customer *</label>
+          <select class="form-control" id="m-rec-cust-id" onchange="mRecCustomerChanged()">
+            <!-- Dynamic -->
+          </select>
+        </div>
+        <p style="margin-bottom:15px; font-size:0.9rem; color:var(--danger)">Current Balance: Rs. <span id="m-rec-curr-bal">0</span></p>
+        <div class="form-group">
+          <label>Payment Received Amount (Rs.) *</label>
+          <input type="number" class="form-control" id="m-rec-amount" required>
+        </div>
+        <div class="form-group">
+          <label>Notes / Description</label>
+          <input type="text" class="form-control" id="m-rec-notes" placeholder="e.g. Cash recovery">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-receive-payment')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveCustomerPayment()">Save Payment & Print Receipt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Supplier -->
+  <div class="modal-overlay" id="modal-add-supplier">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Register New Supplier</h3>
+        <span style="cursor:pointer" onclick="closeModal('modal-add-supplier')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Supplier Name *</label>
+          <input type="text" class="form-control" id="m-supp-name" required>
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="text" class="form-control" id="m-supp-phone">
+        </div>
+        <div class="form-group">
+          <label>Supplied Products</label>
+          <select class="form-control" id="m-supp-product">
+            <option value="Buffalo Milk">Buffalo Milk</option>
+            <option value="Yogurt (Dahi)">Yogurt (Dahi)</option>
+            <option value="Both">Both Milk & Yogurt</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-add-supplier')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSupplier()">Save Supplier</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Purchase -->
+  <div class="modal-overlay" id="modal-add-purchase">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Record Supplier Stock Purchase</h3>
+        <span style="cursor:pointer" onclick="closeModal('modal-add-purchase')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Select Supplier *</label>
+          <select class="form-control" id="m-pur-supp-id">
+            <!-- Dynamic -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Product *</label>
+          <select class="form-control" id="m-pur-prod" onchange="mPurProdChanged()">
+            <option value="Buffalo Milk">Buffalo Milk</option>
+            <option value="Yogurt (Dahi)">Yogurt (Dahi)</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Quantity (L/Kg) *</label>
+            <input type="number" class="form-control" id="m-pur-qty" oninput="mPurCalcTotal()">
+          </div>
+          <div class="form-group">
+            <label>Purchase Rate (Rs) *</label>
+            <input type="number" class="form-control" id="m-pur-rate" oninput="mPurCalcTotal()">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Total Purchase Cost: <strong id="m-pur-total-cost">Rs. 0</strong></label>
+        </div>
+        <div class="form-group">
+          <label>Amount Paid Now (Rs.)</label>
+          <input type="number" class="form-control" id="m-pur-paid" value="0" oninput="mPurCalcTotal()">
+        </div>
+        <div class="form-group">
+          <label style="color:var(--danger)">Remaining Payable: <strong id="m-pur-remaining">Rs. 0</strong></label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-add-purchase')">Cancel</button>
+        <button class="btn btn-primary" onclick="savePurchase()">Save Purchase</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Pay Supplier -->
+  <div class="modal-overlay" id="modal-pay-supplier">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Record Supplier Payment Out</h3>
+        <span style="cursor:pointer" onclick="closeModal('modal-pay-supplier')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Select Supplier *</label>
+          <select class="form-control" id="m-spay-supp-id" onchange="mSpaySupplierChanged()">
+            <!-- Dynamic -->
+          </select>
+        </div>
+        <p style="margin-bottom:15px; font-size:0.9rem; color:var(--warning)">Current Payable Balance: Rs. <span id="m-spay-curr-bal">0</span></p>
+        <div class="form-group">
+          <label>Payment Amount (Rs.) *</label>
+          <input type="number" class="form-control" id="m-spay-amount" required>
+        </div>
+        <div class="form-group">
+          <label>Notes / Receipt Info</label>
+          <input type="text" class="form-control" id="m-spay-notes" placeholder="e.g. Cash payment to milk driver">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-pay-supplier')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSupplierPayment()">Save Payment & Print Receipt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Record Expense -->
+  <div class="modal-overlay" id="modal-add-expense">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Record Shop Expense</h3>
+        <span style="cursor:pointer" onclick="closeModal('modal-add-expense')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Expense Category *</label>
+          <select class="form-control" id="m-exp-cat">
+            <option value="Electricity Bill">Electricity Bill</option>
+            <option value="Shop Rent">Shop Rent</option>
+            <option value="Staff Salary">Staff Salary</option>
+            <option value="Ice / Refrigeration">Ice / Refrigeration</option>
+            <option value="Packaging / Bags">Packaging / Bags</option>
+            <option value="Miscellaneous">Miscellaneous</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Amount (Rs.) *</label>
+          <input type="number" class="form-control" id="m-exp-amount" required>
+        </div>
+        <div class="form-group">
+          <label>Description (Optional)</label>
+          <input type="text" class="form-control" id="m-exp-desc" placeholder="Details of expense (optional)">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modal-add-expense')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveExpense()">Save Expense</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden Printable Document Area -->
+  <div id="printable-area" style="display:none;"></div>
+
+  <!-- Google Client Library for Drive Auth -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <script>
+    /* ==========================================================================
+       1. INDEXEDDB DATABASE ENGINE
+       ========================================================================== */
+    const DB_NAME = 'ALShahbazMilkDB';
+    const DB_VERSION = 1;
+    let db = null;
+
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onerror = (e) => reject("Database Error: " + e.target.errorCode);
+        request.onsuccess = (e) => {
+          db = e.target.result;
+          resolve(db);
+        };
+        request.onupgradeneeded = (e) => {
+          const dbRef = e.target.result;
+          if (!dbRef.objectStoreNames.contains('settings')) dbRef.createObjectStore('settings', { keyPath: 'id' });
+          if (!dbRef.objectStoreNames.contains('customers')) dbRef.createObjectStore('customers', { keyPath: 'id' });
+          if (!dbRef.objectStoreNames.contains('suppliers')) dbRef.createObjectStore('suppliers', { keyPath: 'id' });
+          if (!dbRef.objectStoreNames.contains('sales')) dbRef.createObjectStore('sales', { keyPath: 'id' });
+          if (!dbRef.objectStoreNames.contains('purchases')) dbRef.createObjectStore('purchases', { keyPath: 'id' });
+          if (!dbRef.objectStoreNames.contains('payments')) dbRef.createObjectStore('payments', { keyPath: 'id' });
+          if (!dbRef.objectStoreNames.contains('expenses')) dbRef.createObjectStore('expenses', { keyPath: 'id' });
+          if (!dbRef.objectStoreNames.contains('cashbook')) dbRef.createObjectStore('cashbook', { keyPath: 'id' });
+        };
+      });
+    }
+
+    // Generic DB helper functions
+    function dbGetAll(storeName) {
+      return new Promise((resolve) => {
+        const tx = db.transaction(storeName, 'readonly');
+        const store = tx.objectStore(storeName);
+        const req = store.getAll();
+        req.onsuccess = () => resolve(req.result || []);
+      });
+    }
+
+    function dbPut(storeName, item) {
+      return new Promise((resolve) => {
+        const tx = db.transaction(storeName, 'readwrite');
+        const store = tx.objectStore(storeName);
+        store.put(item);
+        tx.oncomplete = () => resolve(true);
+      });
+    }
+
+    function dbClearStore(storeName) {
+      return new Promise((resolve) => {
+        const tx = db.transaction(storeName, 'readwrite');
+        const store = tx.objectStore(storeName);
+        store.clear();
+        tx.oncomplete = () => resolve(true);
+      });
+    }
+
+    /* ==========================================================================
+       2. STATE & DEFAULT CONFIGURATION
+       ========================================================================== */
+    let AppConfig = {
+      id: 'config',
+      shopName: 'ALSHAHBAZ MILK SHOP',
+      shopPhone: '0300-1234567',
+      shopAddress: 'Main Bazaar, City',
+      receiptFooter: 'Shukriya! Dobara Tashreef Laayein.',
+      openingCash: 0,
+      milkBuyRate: 180,
+      milkSellRate: 210,
+      yogurtBuyRate: 200,
+      yogurtSellRate: 240,
+      gdriveClientId: ''
+    };
+
+    let cart = [];
+    let googleAccessToken = null;
+
+    /* ==========================================================================
+       3. INITIALIZATION & PAGE SWITCHING
+       ========================================================================== */
+    window.addEventListener('DOMContentLoaded', async () => {
+      document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-PK', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+      await initDB();
+      await loadSettings();
+      await renderDashboard();
+      initPOSScreen();
+    });
+
+    function switchPage(pageId) {
+      document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+      
+      document.getElementById('page-' + pageId).classList.add('active');
+      event.currentTarget.classList.add('active');
+
+      const titles = {
+        'dashboard': 'Dashboard',
+        'pos': 'POS / Billing System',
+        'customers': 'Customer Ledgers & Udhaar',
+        'suppliers': 'Suppliers & Purchases',
+        'cashbook': 'Shop Cashbook',
+        'reports': 'Profit & Loss Reports',
+        'settings': 'Settings & Google Drive Backup'
+      };
+      document.getElementById('page-title').innerText = titles[pageId] || 'Dashboard';
+
+      if(pageId === 'dashboard') renderDashboard();
+      if(pageId === 'pos') initPOSScreen();
+      if(pageId === 'customers') renderCustomersTable();
+      if(pageId === 'suppliers') renderSuppliersTable();
+      if(pageId === 'cashbook') renderCashbookTable();
+      if(pageId === 'reports') generateReports();
+    }
+
+    async function loadSettings() {
+      const saved = await dbGetAll('settings');
+      if (saved.length > 0) {
+        AppConfig = { ...AppConfig, ...saved[0] };
+      } else {
+        await dbPut('settings', AppConfig);
+      }
+
+      // Fill settings input fields
+      document.getElementById('cfg-shop-name').value = AppConfig.shopName;
+      document.getElementById('cfg-shop-phone').value = AppConfig.shopPhone;
+      document.getElementById('cfg-shop-address').value = AppConfig.shopAddress;
+      document.getElementById('cfg-receipt-footer').value = AppConfig.receiptFooter;
+      document.getElementById('cfg-opening-cash').value = AppConfig.openingCash;
+      document.getElementById('cfg-milk-buy').value = AppConfig.milkBuyRate;
+      document.getElementById('cfg-milk-sell').value = AppConfig.milkSellRate;
+      document.getElementById('cfg-yogurt-buy').value = AppConfig.yogurtBuyRate;
+      document.getElementById('cfg-yogurt-sell').value = AppConfig.yogurtSellRate;
+      document.getElementById('cfg-gdrive-client-id').value = AppConfig.gdriveClientId || '';
+    }
+
+    async function saveSettings() {
+      AppConfig.shopName = document.getElementById('cfg-shop-name').value;
+      AppConfig.shopPhone = document.getElementById('cfg-shop-phone').value;
+      AppConfig.shopAddress = document.getElementById('cfg-shop-address').value;
+      AppConfig.receiptFooter = document.getElementById('cfg-receipt-footer').value;
+      AppConfig.openingCash = parseFloat(document.getElementById('cfg-opening-cash').value) || 0;
+      AppConfig.milkBuyRate = parseFloat(document.getElementById('cfg-milk-buy').value) || 0;
+      AppConfig.milkSellRate = parseFloat(document.getElementById('cfg-milk-sell').value) || 0;
+      AppConfig.yogurtBuyRate = parseFloat(document.getElementById('cfg-yogurt-buy').value) || 0;
+      AppConfig.yogurtSellRate = parseFloat(document.getElementById('cfg-yogurt-sell').value) || 0;
+      AppConfig.gdriveClientId = document.getElementById('cfg-gdrive-client-id').value.trim();
+
+      await dbPut('settings', AppConfig);
+      alert('Settings & Pricing saved successfully!');
+      initPOSScreen();
+    }
+
+    /* ==========================================================================
+       4. DASHBOARD CALCULATIONS & RENDER
+       ========================================================================== */
+    async function renderDashboard() {
+      const sales = await dbGetAll('sales');
+      const purchases = await dbGetAll('purchases');
+      const customers = await dbGetAll('customers');
+      const suppliers = await dbGetAll('suppliers');
+
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      let todayCash = 0;
+      let todayUdhaar = 0;
+      let todayRevenue = 0;
+      let todayProfit = 0;
+
+      let milkSold = 0, milkBought = 0;
+      let yogurtSold = 0, yogurtBought = 0;
+
+      sales.forEach(s => {
+        const sDate = s.timestamp.split('T')[0];
+        if (sDate === todayStr) {
+          todayCash += s.amountPaid;
+          todayUdhaar += s.remainingUdhaar;
+          todayRevenue += s.grandTotal;
+
+          // Estimate Gross Profit
+          s.items.forEach(it => {
+            const costRate = (it.product === 'Buffalo Milk') ? AppConfig.milkBuyRate : AppConfig.yogurtBuyRate;
+            todayProfit += (it.rate - costRate) * it.qty;
+          });
+        }
+
+        s.items.forEach(it => {
+          if (it.product === 'Buffalo Milk') milkSold += it.qty;
+          if (it.product === 'Yogurt (Dahi)') yogurtSold += it.qty;
+        });
+      });
+
+      purchases.forEach(p => {
+        if (p.product === 'Buffalo Milk') milkBought += p.qty;
+        if (p.product === 'Yogurt (Dahi)') yogurtBought += p.qty;
+      });
+
+      // Total Outstanding Udhaar
+      let totalUdhaarOutstanding = 0;
+      customers.forEach(c => {
+        totalUdhaarOutstanding += (c.totalUdhaar - c.totalPaid + (c.openingBalance || 0));
+      });
+
+      // Total Supplier Payables
+      let totalSupplierPayables = 0;
+      suppliers.forEach(sp => {
+        totalSupplierPayables += (sp.totalPurchased - sp.totalPaid);
+      });
+
+      document.getElementById('dash-today-cash').innerText = `Rs. ${todayCash.toLocaleString()}`;
+      document.getElementById('dash-today-udhaar').innerText = `Rs. ${todayUdhaar.toLocaleString()}`;
+      document.getElementById('dash-total-udhaar-outstanding').innerText = `Rs. ${totalUdhaarOutstanding.toLocaleString()}`;
+      document.getElementById('dash-total-supplier-payables').innerText = `Rs. ${totalSupplierPayables.toLocaleString()}`;
+      document.getElementById('dash-milk-qty').innerText = `${milkSold} L / ${milkBought} L`;
+      document.getElementById('dash-yogurt-qty').innerText = `${yogurtSold} Kg / ${yogurtBought} Kg`;
+      document.getElementById('dash-today-revenue').innerText = `Rs. ${todayRevenue.toLocaleString()}`;
+      document.getElementById('dash-today-profit').innerText = `Rs. ${todayProfit.toLocaleString()}`;
+
+      // Recent Transactions Table
+      const recentSales = sales.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 5);
+      const tbody = document.getElementById('dash-recent-table');
+      tbody.innerHTML = '';
+      recentSales.forEach(s => {
+        const badgeClass = s.paymentStatus === 'Paid' ? 'badge-paid' : (s.paymentStatus === 'Partial' ? 'badge-partial' : 'badge-unpaid');
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${s.invoiceNo}</strong></td>
+            <td>${new Date(s.timestamp).toLocaleString()}</td>
+            <td>${s.customerName}</td>
+            <td>Rs. ${s.grandTotal}</td>
+            <td>Rs. ${s.amountPaid}</td>
+            <td><span class="badge ${badgeClass}">${s.paymentStatus}</span></td>
+            <td>${s.paymentType}</td>
+          </tr>
+        `;
+      });
+    }
+
+    /* ==========================================================================
+       5. POS & BILLING SYSTEM
+       ========================================================================== */
+    async function initPOSScreen() {
+      document.getElementById('pos-price-milk').innerText = AppConfig.milkSellRate;
+      document.getElementById('pos-price-yogurt').innerText = AppConfig.yogurtSellRate;
+
+      // Calculate Remaining Inventory Stocks
+      const sales = await dbGetAll('sales');
+      const purchases = await dbGetAll('purchases');
+
+      let milkIn = 0, milkOut = 0, yogurtIn = 0, yogurtOut = 0;
+      purchases.forEach(p => {
+        if (p.product === 'Buffalo Milk') milkIn += p.qty;
+        if (p.product === 'Yogurt (Dahi)') yogurtIn += p.qty;
+      });
+      sales.forEach(s => {
+        s.items.forEach(it => {
+          if (it.product === 'Buffalo Milk') milkOut += it.qty;
+          if (it.product === 'Yogurt (Dahi)') yogurtOut += it.qty;
+        });
+      });
+
+      document.getElementById('pos-stock-milk').innerText = (milkIn - milkOut).toFixed(1);
+      document.getElementById('pos-stock-yogurt').innerText = (yogurtIn - yogurtOut).toFixed(1);
+
+      // Populate Customers Dropdown
+      const customers = await dbGetAll('customers');
+      const custSelect = document.getElementById('pos-customer-select');
+      custSelect.innerHTML = '<option value="">-- Walk-in Customer (Cash) --</option>';
+      customers.forEach(c => {
+        custSelect.innerHTML += `<option value="${c.id}">${c.name} (${c.phone || 'No phone'})</option>`;
+      });
+
+      cart = [];
+      renderCart();
+    }
+
+    function posAddToCart(productName) {
+      const defaultRate = (productName === 'Buffalo Milk') ? AppConfig.milkSellRate : AppConfig.yogurtSellRate;
+      const existing = cart.find(i => i.product === productName);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({
+          product: productName,
+          qty: 1,
+          rate: defaultRate
+        });
+      }
+      renderCart();
+    }
+
+    function renderCart() {
+      const tbody = document.getElementById('pos-cart-table');
+      tbody.innerHTML = '';
+      cart.forEach((item, index) => {
+        const subtotal = item.qty * item.rate;
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${item.product}</strong></td>
+            <td><input type="number" step="0.5" min="0.1" value="${item.qty}" style="width:70px;" onchange="posUpdateCartItem(${index}, 'qty', this.value)"></td>
+            <td><input type="number" min="0" value="${item.rate}" style="width:80px;" onchange="posUpdateCartItem(${index}, 'rate', this.value)"></td>
+            <td>Rs. ${subtotal}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="posRemoveCartItem(${index})">&times;</button></td>
+          </tr>
+        `;
+      });
+      posCalculateTotals();
+    }
+
+    function posUpdateCartItem(index, field, value) {
+      cart[index][field] = parseFloat(value) || 0;
+      renderCart();
+    }
+
+    function posRemoveCartItem(index) {
+      cart.splice(index, 1);
+      renderCart();
+    }
+
+    function posCustomerChanged() {
+      const custId = document.getElementById('pos-customer-select').value;
+      if (custId) {
+        dbGetAll('customers').then(customers => {
+          const cust = customers.find(c => c.id === custId);
+          if (cust) {
+            document.getElementById('pos-cust-name').value = cust.name;
+            document.getElementById('pos-cust-phone').value = cust.phone || '';
+          }
+        });
+      }
+    }
+
+    function posCalculateTotals() {
+      let subtotal = 0;
+      cart.forEach(i => subtotal += (i.qty * i.rate));
+      const discount = parseFloat(document.getElementById('pos-discount').value) || 0;
+      const grandTotal = Math.max(0, subtotal - discount);
+
+      document.getElementById('pos-subtotal').innerText = `Rs. ${subtotal}`;
+      document.getElementById('pos-grand-total').innerText = `Rs. ${grandTotal}`;
+
+      const paymentType = document.getElementById('pos-payment-type').value;
+      const paidInput = document.getElementById('pos-amount-paid');
+
+      if (paymentType === 'Cash') {
+        paidInput.value = grandTotal;
+        paidInput.readOnly = true;
+      } else if (paymentType === 'Udhaar') {
+        paidInput.value = 0;
+        paidInput.readOnly = true;
+      } else {
+        paidInput.readOnly = false;
+      }
+
+      const paidVal = parseFloat(paidInput.value) || 0;
+      const remainingUdhaar = Math.max(0, grandTotal - paidVal);
+      document.getElementById('pos-remaining-udhaar').innerText = `Rs. ${remainingUdhaar}`;
+    }
+
+    async function posCompleteSale() {
+      if (cart.length === 0) {
+        alert('Cart is empty!');
+        return;
+      }
+
+      let subtotal = 0;
+      cart.forEach(i => subtotal += (i.qty * i.rate));
+      const discount = parseFloat(document.getElementById('pos-discount').value) || 0;
+      const grandTotal = Math.max(0, subtotal - discount);
+      const paidVal = parseFloat(document.getElementById('pos-amount-paid').value) || 0;
+      const remainingUdhaar = Math.max(0, grandTotal - paidVal);
+      const paymentType = document.getElementById('pos-payment-type').value;
+
+      const custName = document.getElementById('pos-cust-name').value.trim() || 'Walk-in Customer';
+      const custPhone = document.getElementById('pos-cust-phone').value.trim();
+      const selectedCustId = document.getElementById('pos-customer-select').value;
+
+      if (remainingUdhaar > 0 && !selectedCustId && custName === 'Walk-in Customer') {
+        alert('For Udhaar sales, please select or specify a registered customer name.');
+        return;
+      }
+
+      let customerId = selectedCustId;
+
+      // Auto register customer if name given and remaining balance exists
+      if (!customerId && custName !== 'Walk-in Customer') {
+        customerId = 'cust_' + Date.now();
+        await dbPut('customers', {
+          id: customerId,
+          name: custName,
+          phone: custPhone,
+          address: '',
+          openingBalance: 0,
+          totalUdhaar: 0,
+          totalPaid: 0
+        });
+      }
+
+      const invoiceNo = 'INV-' + Math.floor(100000 + Math.random() * 900000);
+      let status = 'Paid';
+      if (remainingUdhaar === grandTotal) status = 'Unpaid';
+      else if (remainingUdhaar > 0) status = 'Partial';
+
+      const saleRecord = {
+        id: 'sale_' + Date.now(),
+        invoiceNo: invoiceNo,
+        timestamp: new Date().toISOString(),
+        customerId: customerId || null,
+        customerName: custName,
+        customerPhone: custPhone,
+        items: [...cart],
+        subtotal: subtotal,
+        discount: discount,
+        grandTotal: grandTotal,
+        amountPaid: paidVal,
+        remainingUdhaar: remainingUdhaar,
+        paymentType: paymentType,
+        paymentStatus: status
+      };
+
+      await dbPut('sales', saleRecord);
+
+      // Record in Cashbook if cash paid
+      if (paidVal > 0) {
+        await dbPut('cashbook', {
+          id: 'cb_' + Date.now(),
+          timestamp: new Date().toISOString(),
+          type: 'IN',
+          category: 'Sale Cash Payment',
+          description: `Sale ${invoiceNo} - ${custName}`,
+          amountIn: paidVal,
+          amountOut: 0
+        });
+      }
+
+      // Update customer ledger summary
+      if (customerId) {
+        const customers = await dbGetAll('customers');
+        const cust = customers.find(c => c.id === customerId);
+        if (cust) {
+          cust.totalUdhaar = (cust.totalUdhaar || 0) + remainingUdhaar;
+          await dbPut('customers', cust);
+        }
+      }
+
+      printSaleReceipt(saleRecord);
+
+      // Reset
+      cart = [];
+      document.getElementById('pos-discount').value = 0;
+      document.getElementById('pos-cust-name').value = '';
+      document.getElementById('pos-cust-phone').value = '';
+      initPOSScreen();
+    }
+
+    /* ==========================================================================
+       6. CUSTOMERS & UDHAAR LEDGER
+       ========================================================================== */
+    async function renderCustomersTable() {
+      const customers = await dbGetAll('customers');
+      const sales = await dbGetAll('sales');
+      const payments = await dbGetAll('payments');
+      const filter = document.getElementById('customer-search-input')?.value.toLowerCase() || '';
+
+      const tbody = document.getElementById('customers-table-body');
+      tbody.innerHTML = '';
+
+      customers.forEach(c => {
+        if (filter && !c.name.toLowerCase().includes(filter) && !c.phone?.includes(filter)) return;
+
+        // Calculate Ledger dynamically
+        let totalUdhaarCharged = c.openingBalance || 0;
+        sales.forEach(s => {
+          if (s.customerId === c.id) totalUdhaarCharged += s.remainingUdhaar;
+        });
+
+        let totalPaidReceived = 0;
+        payments.forEach(p => {
+          if (p.customerId === c.id) totalPaidReceived += p.amount;
+        });
+
+        const currentBal = totalUdhaarCharged - totalPaidReceived;
+
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${c.name}</strong></td>
+            <td>${c.phone || '-'}</td>
+            <td>${c.address || '-'}</td>
+            <td>Rs. ${totalUdhaarCharged}</td>
+            <td>Rs. ${totalPaidReceived}</td>
+            <td style="font-weight:bold; color:${currentBal > 0 ? 'var(--danger)' : 'var(--success)'}">Rs. ${currentBal}</td>
+            <td>
+              <button class="btn btn-outline btn-sm" onclick="viewCustomerStatement('${c.id}')">Statement</button>
+              <button class="btn btn-primary btn-sm" onclick="openReceivePaymentModal('${c.id}')">Receive Rs</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    async function saveCustomer() {
+      const name = document.getElementById('m-cust-name').value.trim();
+      if (!name) { alert('Name required'); return; }
+
+      const customer = {
+        id: 'cust_' + Date.now(),
+        name: name,
+        phone: document.getElementById('m-cust-phone').value.trim(),
+        address: document.getElementById('m-cust-address').value.trim(),
+        openingBalance: parseFloat(document.getElementById('m-cust-opening').value) || 0,
+        totalUdhaar: 0,
+        totalPaid: 0
+      };
+
+      await dbPut('customers', customer);
+      closeModal('modal-add-customer');
+      renderCustomersTable();
+      initPOSScreen();
+    }
+
+    async function openReceivePaymentModal(custID = null) {
+      const customers = await dbGetAll('customers');
+      const select = document.getElementById('m-rec-cust-id');
+      select.innerHTML = '';
+      customers.forEach(c => {
+        select.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+      });
+      if (custID) select.value = custID;
+      mRecCustomerChanged();
+      openModal('modal-receive-payment');
+    }
+
+    async function mRecCustomerChanged() {
+      const custId = document.getElementById('m-rec-cust-id').value;
+      if (!custId) return;
+      const customers = await dbGetAll('customers');
+      const sales = await dbGetAll('sales');
+      const payments = await dbGetAll('payments');
+
+      const c = customers.find(x => x.id === custId);
+      let totalUdhaarCharged = c.openingBalance || 0;
+      sales.forEach(s => { if (s.customerId === c.id) totalUdhaarCharged += s.remainingUdhaar; });
+      let totalPaidReceived = 0;
+      payments.forEach(p => { if (p.customerId === c.id) totalPaidReceived += p.amount; });
+
+      document.getElementById('m-rec-curr-bal').innerText = (totalUdhaarCharged - totalPaidReceived);
+    }
+
+    async function saveCustomerPayment() {
+      const custId = document.getElementById('m-rec-cust-id').value;
+      const amount = parseFloat(document.getElementById('m-rec-amount').value) || 0;
+      const notes = document.getElementById('m-rec-notes').value.trim();
+
+      if (!custId || amount <= 0) { alert('Valid customer and amount required'); return; }
+
+      const customers = await dbGetAll('customers');
+      const cust = customers.find(c => c.id === custId);
+
+      const payRecord = {
+        id: 'pay_' + Date.now(),
+        receiptNo: 'REC-' + Math.floor(100000 + Math.random() * 900000),
+        timestamp: new Date().toISOString(),
+        customerId: custId,
+        customerName: cust.name,
+        amount: amount,
+        notes: notes
+      };
+
+      await dbPut('payments', payRecord);
+
+      // Record in cashbook
+      await dbPut('cashbook', {
+        id: 'cb_' + Date.now(),
+        timestamp: new Date().toISOString(),
+        type: 'IN',
+        category: 'Customer Udhaar Recovery',
+        description: `Udhaar Recovery from ${cust.name}`,
+        amountIn: amount,
+        amountOut: 0
+      });
+
+      closeModal('modal-receive-payment');
+      printCustomerPaymentReceipt(payRecord);
+      renderCustomersTable();
+      renderDashboard();
+    }
+
+    /* ==========================================================================
+       7. SUPPLIERS & PAYABLES
+       ========================================================================== */
+    async function renderSuppliersTable() {
+      const suppliers = await dbGetAll('suppliers');
+      const purchases = await dbGetAll('purchases');
+      const tbody = document.getElementById('suppliers-table-body');
+      tbody.innerHTML = '';
+
+      suppliers.forEach(sp => {
+        let totalPurchased = 0;
+        let totalPaid = 0;
+
+        purchases.forEach(p => {
+          if (p.supplierId === sp.id) {
+            totalPurchased += p.totalCost;
+            totalPaid += p.amountPaid;
+          }
+        });
+
+        const payableBal = totalPurchased - totalPaid;
+
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${sp.name}</strong></td>
+            <td>${sp.phone || '-'}</td>
+            <td>${sp.product}</td>
+            <td>Rs. ${totalPurchased}</td>
+            <td>Rs. ${totalPaid}</td>
+            <td style="font-weight:bold; color:var(--warning)">Rs. ${payableBal}</td>
+            <td>
+              <button class="btn btn-outline btn-sm" onclick="viewSupplierStatement('${sp.id}')">Statement</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      // Populate Supplier dropdowns in modals
+      const selectPur = document.getElementById('m-pur-supp-id');
+      const selectPay = document.getElementById('m-spay-supp-id');
+      selectPur.innerHTML = '';
+      selectPay.innerHTML = '';
+      suppliers.forEach(sp => {
+        selectPur.innerHTML += `<option value="${sp.id}">${sp.name}</option>`;
+        selectPay.innerHTML += `<option value="${sp.id}">${sp.name}</option>`;
+      });
+    }
+
+    async function saveSupplier() {
+      const name = document.getElementById('m-supp-name').value.trim();
+      if (!name) { alert('Supplier name required'); return; }
+
+      await dbPut('suppliers', {
+        id: 'supp_' + Date.now(),
+        name: name,
+        phone: document.getElementById('m-supp-phone').value.trim(),
+        product: document.getElementById('m-supp-product').value,
+        totalPurchased: 0,
+        totalPaid: 0
+      });
+
+      closeModal('modal-add-supplier');
+      renderSuppliersTable();
+    }
+
+    function mPurCalcTotal() {
+      const qty = parseFloat(document.getElementById('m-pur-qty').value) || 0;
+      const rate = parseFloat(document.getElementById('m-pur-rate').value) || 0;
+      const paid = parseFloat(document.getElementById('m-pur-paid').value) || 0;
+      const total = qty * rate;
+      const rem = Math.max(0, total - paid);
+
+      document.getElementById('m-pur-total-cost').innerText = `Rs. ${total}`;
+      document.getElementById('m-pur-remaining').innerText = `Rs. ${rem}`;
+    }
+
+    async function savePurchase() {
+      const suppId = document.getElementById('m-pur-supp-id').value;
+      const prod = document.getElementById('m-pur-prod').value;
+      const qty = parseFloat(document.getElementById('m-pur-qty').value) || 0;
+      const rate = parseFloat(document.getElementById('m-pur-rate').value) || 0;
+      const paid = parseFloat(document.getElementById('m-pur-paid').value) || 0;
+
+      if (!suppId || qty <= 0 || rate <= 0) { alert('Enter valid quantity and rate'); return; }
+
+      const suppliers = await dbGetAll('suppliers');
+      const supp = suppliers.find(s => s.id === suppId);
+
+      const totalCost = qty * rate;
+      const remainingPayable = Math.max(0, totalCost - paid);
+
+      const purchaseRecord = {
+        id: 'pur_' + Date.now(),
+        timestamp: new Date().toISOString(),
+        supplierId: suppId,
+        supplierName: supp.name,
+        product: prod,
+        qty: qty,
+        rate: rate,
+        totalCost: totalCost,
+        amountPaid: paid,
+        remainingPayable: remainingPayable
+      };
+
+      await dbPut('purchases', purchaseRecord);
+
+      // Record cash out if paid
+      if (paid > 0) {
+        await dbPut('cashbook', {
+          id: 'cb_' + Date.now(),
+          timestamp: new Date().toISOString(),
+          type: 'OUT',
+          category: 'Supplier Purchase Payment',
+          description: `Stock Purchase Payment to ${supp.name} (${prod})`,
+          amountIn: 0,
+          amountOut: paid
+        });
+      }
+
+      closeModal('modal-add-purchase');
+      renderSuppliersTable();
+      renderDashboard();
+    }
+
+    async function mSpaySupplierChanged() {
+      const suppId = document.getElementById('m-spay-supp-id').value;
+      if (!suppId) return;
+      const purchases = await dbGetAll('purchases');
+      let totalPurchased = 0, totalPaid = 0;
+      purchases.forEach(p => {
+        if (p.supplierId === suppId) {
+          totalPurchased += p.totalCost;
+          totalPaid += p.amountPaid;
+        }
+      });
+      document.getElementById('m-spay-curr-bal').innerText = (totalPurchased - totalPaid);
+    }
+
+    async function saveSupplierPayment() {
+      const suppId = document.getElementById('m-spay-supp-id').value;
+      const amount = parseFloat(document.getElementById('m-spay-amount').value) || 0;
+      const notes = document.getElementById('m-spay-notes').value.trim();
+
+      if (!suppId || amount <= 0) { alert('Valid supplier and amount required'); return; }
+
+      const suppliers = await dbGetAll('suppliers');
+      const supp = suppliers.find(s => s.id === suppId);
+
+      // Update purchases entries sequentially to offset payable balance
+      const purchases = await dbGetAll('purchases');
+      let unallocated = amount;
+      for (let p of purchases) {
+        if (p.supplierId === suppId && p.remainingPayable > 0 && unallocated > 0) {
+          const payTowards = Math.min(p.remainingPayable, unallocated);
+          p.amountPaid += payTowards;
+          p.remainingPayable -= payTowards;
+          unallocated -= payTowards;
+          await dbPut('purchases', p);
+        }
+      }
+
+      await dbPut('cashbook', {
+        id: 'cb_' + Date.now(),
+        timestamp: new Date().toISOString(),
+        type: 'OUT',
+        category: 'Supplier Ledger Settlement',
+        description: `Payment Out to Supplier ${supp.name} (${notes})`,
+        amountIn: 0,
+        amountOut: amount
+      });
+
+      closeModal('modal-pay-supplier');
+      renderSuppliersTable();
+      renderDashboard();
+    }
+
+    /* ==========================================================================
+       8. CASHBOOK & EXPENSES
+       ========================================================================== */
+    async function renderCashbookTable() {
+      const cashbook = await dbGetAll('cashbook');
+      const tbody = document.getElementById('cashbook-table-body');
+      tbody.innerHTML = '';
+
+      let totalIn = 0;
+      let totalOut = 0;
+
+      cashbook.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(cb => {
+        totalIn += cb.amountIn || 0;
+        totalOut += cb.amountOut || 0;
+
+        tbody.innerHTML += `
+          <tr>
+            <td>${new Date(cb.timestamp).toLocaleString()}</td>
+            <td><span class="badge ${cb.type === 'IN' ? 'badge-paid' : 'badge-unpaid'}">${cb.type}</span></td>
+            <td>${cb.category}</td>
+            <td>${cb.description}</td>
+            <td style="color:var(--success)">${cb.amountIn ? 'Rs. ' + cb.amountIn : '-'}</td>
+            <td style="color:var(--danger)">${cb.amountOut ? 'Rs. ' + cb.amountOut : '-'}</td>
+          </tr>
+        `;
+      });
+
+      const openingCash = AppConfig.openingCash || 0;
+      const currentCash = openingCash + totalIn - totalOut;
+
+      document.getElementById('cb-opening-cash').innerText = `Rs. ${openingCash}`;
+      document.getElementById('cb-total-in').innerText = `Rs. ${totalIn}`;
+      document.getElementById('cb-total-out').innerText = `Rs. ${totalOut}`;
+      document.getElementById('cb-current-balance').innerText = `Rs. ${currentCash}`;
+    }
+
+    async function saveExpense() {
+      const cat = document.getElementById('m-exp-cat').value;
+      const amount = parseFloat(document.getElementById('m-exp-amount').value) || 0;
+      const desc = document.getElementById('m-exp-desc').value.trim();
+
+      if (amount <= 0) { alert('Please enter a valid expense amount'); return; }
+
+      await dbPut('expenses', {
+        id: 'exp_' + Date.now(),
+        timestamp: new Date().toISOString(),
+        category: cat,
+        amount: amount,
+        description: desc
+      });
+
+      await dbPut('cashbook', {
+        id: 'cb_' + Date.now(),
+        timestamp: new Date().toISOString(),
+        type: 'OUT',
+        category: `Expense: ${cat}`,
+        description: desc,
+        amountIn: 0,
+        amountOut: amount
+      });
+
+      closeModal('modal-add-expense');
+      renderCashbookTable();
+      renderDashboard();
+    }
+
+    /* ==========================================================================
+       9. REPORTS & PROFIT CALCULATIONS
+       ========================================================================== */
+    async function generateReports() {
+      const sales = await dbGetAll('sales');
+      const purchases = await dbGetAll('purchases');
+      const expenses = await dbGetAll('expenses');
+
+      const fromDate = document.getElementById('report-filter-from').value;
+      const toDate = document.getElementById('report-filter-to').value;
+
+      let filterSales = sales;
+      let filterPurchases = purchases;
+      let filterExpenses = expenses;
+
+      if (fromDate) {
+        filterSales = filterSales.filter(s => s.timestamp.split('T')[0] >= fromDate);
+        filterPurchases = filterPurchases.filter(p => p.timestamp.split('T')[0] >= fromDate);
+        filterExpenses = filterExpenses.filter(e => e.timestamp.split('T')[0] >= fromDate);
+      }
+      if (toDate) {
+        filterSales = filterSales.filter(s => s.timestamp.split('T')[0] <= toDate);
+        filterPurchases = filterPurchases.filter(p => p.timestamp.split('T')[0] <= toDate);
+        filterExpenses = filterExpenses.filter(e => e.timestamp.split('T')[0] <= toDate);
+      }
+
+      // Milk breakdown
+      let milkBought = 0, milkBuyCost = 0, milkSold = 0, milkSalesRev = 0;
+      // Yogurt breakdown
+      let yogurtBought = 0, yogurtBuyCost = 0, yogurtSold = 0, yogurtSalesRev = 0;
+
+      filterPurchases.forEach(p => {
+        if (p.product === 'Buffalo Milk') {
+          milkBought += p.qty;
+          milkBuyCost += p.totalCost;
+        } else {
+          yogurtBought += p.qty;
+          yogurtBuyCost += p.totalCost;
+        }
+      });
+
+      filterSales.forEach(s => {
+        s.items.forEach(it => {
+          if (it.product === 'Buffalo Milk') {
+            milkSold += it.qty;
+            milkSalesRev += (it.qty * it.rate);
+          } else {
+            yogurtSold += it.qty;
+            yogurtSalesRev += (it.qty * it.rate);
+          }
+        });
+      });
+
+      // Calculate COGS properly (sold qty * unit buy cost)
+      const avgMilkBuyRate = milkBought > 0 ? (milkBuyCost / milkBought) : AppConfig.milkBuyRate;
+      const avgYogurtBuyRate = yogurtBought > 0 ? (yogurtBuyCost / yogurtBought) : AppConfig.yogurtBuyRate;
+
+      const milkCOGS = milkSold * avgMilkBuyRate;
+      const yogurtCOGS = yogurtSold * avgYogurtBuyRate;
+
+      const milkGrossProfit = milkSalesRev - milkCOGS;
+      const yogurtGrossProfit = yogurtSalesRev - yogurtCOGS;
+
+      const totalSalesRevenue = milkSalesRev + yogurtSalesRev;
+      const totalCOGS = milkCOGS + yogurtCOGS;
+      const grossProfit = totalSalesRevenue - totalCOGS;
+
+      let totalOperatingExpenses = 0;
+      filterExpenses.forEach(e => totalOperatingExpenses += e.amount);
+
+      const netProfit = grossProfit - totalOperatingExpenses;
+
+      document.getElementById('rep-milk-bought').innerText = `${milkBought} L`;
+      document.getElementById('rep-milk-buy-cost').innerText = `Rs. ${milkBuyCost}`;
+      document.getElementById('rep-milk-sold').innerText = `${milkSold} L`;
+      document.getElementById('rep-milk-sales-rev').innerText = `Rs. ${milkSalesRev}`;
+      document.getElementById('rep-milk-profit').innerText = `Rs. ${milkGrossProfit}`;
+
+      document.getElementById('rep-yogurt-bought').innerText = `${yogurtBought} Kg`;
+      document.getElementById('rep-yogurt-buy-cost').innerText = `Rs. ${yogurtBuyCost}`;
+      document.getElementById('rep-yogurt-sold').innerText = `${yogurtSold} Kg`;
+      document.getElementById('rep-yogurt-sales-rev').innerText = `Rs. ${yogurtSalesRev}`;
+      document.getElementById('rep-yogurt-profit').innerText = `Rs. ${yogurtGrossProfit}`;
+
+      document.getElementById('rep-net-sales').innerText = `Rs. ${totalSalesRevenue}`;
+      document.getElementById('rep-net-cogs').innerText = `Rs. ${totalCOGS}`;
+      document.getElementById('rep-net-gross').innerText = `Rs. ${grossProfit}`;
+      document.getElementById('rep-net-expenses').innerText = `Rs. ${totalOperatingExpenses}`;
+      document.getElementById('rep-net-final').innerText = `Rs. ${netProfit}`;
+    }
+
+    async function exportCSV() {
+      const sales = await dbGetAll('sales');
+      let csvContent = "data:text/csv;charset=utf-8,InvoiceNo,Date,Customer,GrandTotal,AmountPaid,RemainingUdhaar,Status\n";
+      sales.forEach(s => {
+        csvContent += `${s.invoiceNo},${s.timestamp},"${s.customerName}",${s.grandTotal},${s.amountPaid},${s.remainingUdhaar},${s.paymentStatus}\n`;
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `Sales_Report_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    /* ==========================================================================
+       10. PRINTING ENGINE & RECEIPTS
+       ========================================================================== */
+    function printSaleReceipt(sale) {
+      const printArea = document.getElementById('printable-area');
+      printArea.style.display = 'block';
+
+      let itemsHtml = '';
+      sale.items.forEach(it => {
+        itemsHtml += `
+          <tr>
+            <td>${it.product}</td>
+            <td>${it.qty}</td>
+            <td>${it.rate}</td>
+            <td>${it.qty * it.rate}</td>
+          </tr>
+        `;
+      });
+
+      printArea.innerHTML = `
+        <div class="receipt-box">
+          <div class="receipt-header">
+            <h2>${AppConfig.shopName}</h2>
+            <p>${AppConfig.shopAddress}</p>
+            <p>Ph: ${AppConfig.shopPhone}</p>
+            <p>--------------------------------</p>
+            <p><strong>INVOICE: ${sale.invoiceNo}</strong></p>
+            <p>Date: ${new Date(sale.timestamp).toLocaleString()}</p>
+            <p>Customer: ${sale.customerName}</p>
+          </div>
+          <table class="receipt-table">
+            <thead>
+              <tr><th>Item</th><th>Qty</th><th>Rate</th><th>Total</th></tr>
+            </thead>
+            <tbody>
+              ${itemsHtml}
+            </tbody>
+          </table>
+          <div class="receipt-total">
+            <div style="display:flex; justify-content:space-between"><span>Subtotal:</span><span>Rs. ${sale.subtotal}</span></div>
+            <div style="display:flex; justify-content:space-between"><span>Discount:</span><span>Rs. ${sale.discount}</span></div>
+            <div style="display:flex; justify-content:space-between; font-weight:bold"><span>Grand Total:</span><span>Rs. ${sale.grandTotal}</span></div>
+            <div style="display:flex; justify-content:space-between"><span>Amount Paid:</span><span>Rs. ${sale.amountPaid}</span></div>
+            <div style="display:flex; justify-content:space-between; font-weight:bold; color:red"><span>Remaining Udhaar:</span><span>Rs. ${sale.remainingUdhaar}</span></div>
+          </div>
+          <div style="text-align:center; margin-top:15px;">
+            <p>${AppConfig.receiptFooter}</p>
+          </div>
+        </div>
+      `;
+
+      window.print();
+      printArea.style.display = 'none';
+    }
+
+    function printCustomerPaymentReceipt(pay) {
+      const printArea = document.getElementById('printable-area');
+      printArea.style.display = 'block';
+      printArea.innerHTML = `
+        <div class="receipt-box">
+          <div class="receipt-header">
+            <h2>${AppConfig.shopName}</h2>
+            <p>UDHAAR RECOVERY RECEIPT</p>
+            <p>Receipt No: ${pay.receiptNo}</p>
+            <p>Date: ${new Date(pay.timestamp).toLocaleString()}</p>
+          </div>
+          <p><strong>Customer:</strong> ${pay.customerName}</p>
+          <p><strong>Amount Received:</strong> Rs. ${pay.amount}</p>
+          <p><strong>Note:</strong> ${pay.notes || '-'}</p>
+          <div style="text-align:center; margin-top:20px;">
+            <p>${AppConfig.receiptFooter}</p>
+          </div>
+        </div>
+      `;
+      window.print();
+      printArea.style.display = 'none';
+    }
+
+    async function viewCustomerStatement(custId) {
+      const customers = await dbGetAll('customers');
+      const sales = await dbGetAll('sales');
+      const payments = await dbGetAll('payments');
+
+      const cust = customers.find(c => c.id === custId);
+      const custSales = sales.filter(s => s.customerId === custId);
+      const custPayments = payments.filter(p => p.customerId === custId);
+
+      let rows = '';
+      custSales.forEach(s => {
+        rows += `<tr><td>${new Date(s.timestamp).toLocaleDateString()}</td><td>Sale (${s.invoiceNo})</td><td>Rs. ${s.grandTotal}</td><td>-</td></tr>`;
+      });
+      custPayments.forEach(p => {
+        rows += `<tr><td>${new Date(p.timestamp).toLocaleDateString()}</td><td>Payment Received (${p.receiptNo})</td><td>-</td><td>Rs. ${p.amount}</td></tr>`;
+      });
+
+      const printArea = document.getElementById('printable-area');
+      printArea.style.display = 'block';
+      printArea.innerHTML = `
+        <div style="padding:20px; font-family:sans-serif;">
+          <h2>${AppConfig.shopName} - Customer Account Statement</h2>
+          <p><strong>Customer Name:</strong> ${cust.name} | <strong>Phone:</strong> ${cust.phone || '-'}</p>
+          <hr style="margin:10px 0;">
+          <table border="1" cellpadding="8" style="width:100%; border-collapse:collapse;">
+            <thead><tr><th>Date</th><th>Description</th><th>Udhaar Added</th><th>Payment Received</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+      window.print();
+      printArea.style.display = 'none';
+    }
+
+    async function viewSupplierStatement(suppId) {
+      const suppliers = await dbGetAll('suppliers');
+      const purchases = await dbGetAll('purchases');
+
+      const supp = suppliers.find(s => s.id === suppId);
+      const suppPurchases = purchases.filter(p => p.supplierId === suppId);
+
+      let rows = '';
+      suppPurchases.forEach(p => {
+        rows += `<tr><td>${new Date(p.timestamp).toLocaleDateString()}</td><td>${p.product} Purchase (${p.qty} units)</td><td>Rs. ${p.totalCost}</td><td>Rs. ${p.amountPaid}</td><td>Rs. ${p.remainingPayable}</td></tr>`;
+      });
+
+      const printArea = document.getElementById('printable-area');
+      printArea.style.display = 'block';
+      printArea.innerHTML = `
+        <div style="padding:20px; font-family:sans-serif;">
+          <h2>${AppConfig.shopName} - Supplier Account Statement</h2>
+          <p><strong>Supplier Name:</strong> ${supp.name} | <strong>Phone:</strong> ${supp.phone || '-'}</p>
+          <hr style="margin:10px 0;">
+          <table border="1" cellpadding="8" style="width:100%; border-collapse:collapse;">
+            <thead><tr><th>Date</th><th>Description</th><th>Total Cost</th><th>Amount Paid</th><th>Remaining Balance</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+      window.print();
+      printArea.style.display = 'none';
+    }
+
+    /* ==========================================================================
+       11. GOOGLE DRIVE BACKUP & LOCAL JSON EXPORT
+       ========================================================================== */
+    function initGoogleAuth() {
+      const clientId = document.getElementById('cfg-gdrive-client-id').value.trim();
+      if (!clientId) {
+        alert('Please enter your Google OAuth Client ID in Settings first.');
+        return;
+      }
+
+      const client = google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: 'https://www.googleapis.com/auth/drive.file',
+        callback: (response) => {
+          if (response.access_token) {
+            googleAccessToken = response.access_token;
+            document.getElementById('gdrive-status').innerText = 'Connected & Authenticated';
+            document.getElementById('gdrive-status').style.color = 'var(--success)';
+            alert('Google Drive connection authorized successfully!');
+          }
+        },
+      });
+      client.requestAccessToken();
+    }
+
+    async function uploadToGoogleDrive() {
+      if (!googleAccessToken) {
+        alert('Google Drive not authenticated! Click "Authenticate Google Drive" first.');
+        return;
+      }
+
+      const backupData = await generateFullBackupObject();
+      const fileData = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+      const metadata = {
+        name: `ALSHAHBAZ_Backup_${new Date().toISOString().replace(/[:.]/g, '-')}.json`,
+        mimeType: 'application/json',
+      };
+
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+      form.append('file', fileData);
+
+      try {
+        const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+          method: 'POST',
+          headers: new Headers({ 'Authorization': 'Bearer ' + googleAccessToken }),
+          body: form,
+        });
+        const result = await res.json();
+        if (result.id) {
+          alert('Backup uploaded successfully to Google Drive! File ID: ' + result.id);
+        } else {
+          alert('Upload failed: ' + JSON.stringify(result));
+        }
+      } catch (err) {
+        alert('Error uploading to Drive: ' + err);
+      }
+    }
+
+    async function generateFullBackupObject() {
+      return {
+        settings: await dbGetAll('settings'),
+        customers: await dbGetAll('customers'),
+        suppliers: await dbGetAll('suppliers'),
+        sales: await dbGetAll('sales'),
+        purchases: await dbGetAll('purchases'),
+        payments: await dbGetAll('payments'),
+        expenses: await dbGetAll('expenses'),
+        cashbook: await dbGetAll('cashbook')
+      };
+    }
+
+    async function exportJSONBackup() {
+      const backup = await generateFullBackupObject();
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ALSHAHBAZ_MilkShop_Backup_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+    }
+
+    function importJSONBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.customers && data.sales) {
+            if (confirm('Restoring this backup will replace current local records. Continue?')) {
+              await resetAllStores();
+              for (let store in data) {
+                for (let item of data[store]) {
+                  await dbPut(store, item);
+                }
+              }
+              alert('Backup restored successfully!');
+              location.reload();
+            }
+          } else {
+            alert('Invalid backup file format.');
+          }
+        } catch (err) {
+          alert('Failed to parse backup JSON file.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    async function resetAllStores() {
+      const stores = ['settings', 'customers', 'suppliers', 'sales', 'purchases', 'payments', 'expenses', 'cashbook'];
+      for (let s of stores) {
+        await dbClearStore(s);
+      }
+    }
+
+    async function resetAllRecords() {
+      if (confirm('PERMANENT WARNING: Are you sure you want to reset all business records? This action cannot be undone.')) {
+        const keepSettings = confirm('Keep shop settings and product rates? (Click Cancel to wipe settings as well)');
+        const currentSettings = await dbGetAll('settings');
+
+        await resetAllStores();
+
+        if (keepSettings && currentSettings.length > 0) {
+          await dbPut('settings', currentSettings[0]);
+        }
+
+        alert('All business records have been completely reset.');
+        location.reload();
+      }
+    }
+
+    /* ==========================================================================
+       12. MODAL CONTROLS
+       ========================================================================== */
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+  </script>
+</body>
+</html>
